@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naija Events - Local Event Hub</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <!-- Firebase SDK - Load in correct order -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <!-- Header/Navigation -->
+    <header class="header">
+        <div class="container">
+            <div class="header-top">
+                <div class="logo">
+                    <h1>�🇬 Naija Events</h1>
+                </div>
+                <nav class="main-nav">
+                    <ul class="nav-list">
+                        <li><a href="index.html" class="nav-link active">Home</a></li>
+                        <li><a href="pages/event-list.html" class="nav-link">Browse Events</a></li>
+                        <li><a href="pages/post-event.html" class="nav-link">Post Event</a></li>
+                        <li id="adminLink" style="display: none;"><a href="pages/admin.html" class="nav-link">Admin</a></li>
+                    </ul>
+                </nav>
+                <div class="auth-menu">
+                    <!-- Notification Bell -->
+                    <div class="notification-bell">
+                        <button class="bell-icon" id="notificationBell" title="Notifications">🔔</button>
+                        <span class="notification-count" id="notificationCount" style="display: none;">0</span>
+                        
+                        <div class="notification-panel" id="notificationPanel" style="display: none;">
+                            <div class="panel-header">
+                                <h3>Notifications</h3>
+                                <button class="notifications-clear-all">Clear All</button>
+                            </div>
+                            <div class="notifications-list" id="notificationsList">
+                                <div class="notifications-empty"><p>No notifications yet</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Ellipsis Button -->
+                    <button class="menu-ellipsis-btn" id="menuEllipsisBtn" title="Menu">⋯</button>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="menu-dropdown" id="menuDropdown" style="display: none;">
+                        <a href="index.html" class="dropdown-link">Home</a>
+                        <a href="pages/event-list.html" class="dropdown-link">Browse Events</a>
+                        <a href="pages/post-event.html" class="dropdown-link">Post Event</a>
+                        <a href="pages/admin.html" class="dropdown-link">Admin</a>
+                        <a href="pages/profile.html" class="dropdown-link">Profile</a>
+                    </div>
+                    
+                    <div id="authLoggedOut">
+                        <button class="btn-text" onclick="openAuthModal()">Sign In</button>
+                    </div>
+                    <div id="authLoggedIn" style="display: none;">
+                        <span id="userEmail" class="user-email"></span>
+                        <button class="btn-text" onclick="logoutUser()">Log Out</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h2>Discover Local Events in Nigeria</h2>
+                    <p>Find and share celebrations happening in your community</p>
+                    <div class="hero-search">
+                        <input type="text" id="heroSearch" placeholder="Search events...">
+                        <button onclick="searchFromHome()">Search</button>
+                    </div>
+                    <div class="hero-cta">
+                        <a href="pages/event-list.html" class="btn btn-primary">Browse Events</a>
+                        <a href="pages/post-event.html" class="btn btn-secondary">Post Event</a>
+                        <a href="pages/event-details.html" class="btn btn-secondary">Event Details</a>
+                        <a href="pages/admin.html" class="btn btn-secondary">Admin</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section class="categories">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 3rem;">Browse Events by Category</h2>
+                <div class="category-grid">
+                    <div class="category-card" onclick="filterByCategory('Wedding')">
+                        <div class="category-icon">💒</div>
+                        <h3>Weddings</h3>
+                        <p>Celebrate special unions</p>
+                    </div>
+                    <div class="category-card" onclick="filterByCategory('Festival')">
+                        <div class="category-icon">🎊</div>
+                        <h3>Festivals</h3>
+                        <p>Community celebrations</p>
+                    </div>
+                    <div class="category-card" onclick="filterByCategory('Naming')">
+                        <div class="category-icon">👶</div>
+                        <h3>Naming Ceremonies</h3>
+                        <p>Welcome new arrivals</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="about">
+            <div class="container">
+                <div style="max-width: 900px; margin: 0 auto;">
+                    <h2 style="text-align: center; margin-bottom: 2rem;">About Naija Events</h2>
+                    <p style="text-align: center; font-size: 1.1rem; margin-bottom: 3rem; color: var(--gray-color);">
+                        At Naija Events, we believe that strong Nigerian communities are built on shared experiences and celebrations. Our platform makes it easy for people to discover local events, share their own traditional celebrations, and connect with their neighbors across Nigeria.
+                    </p>
+
+                    <h3 style="margin-bottom: 1.5rem; text-align: center;">What We Offer</h3>
+                    <div class="features" style="margin-bottom: 3rem;">
+                        <div class="feature">
+                            <span class="feature-icon">🔍</span>
+                            <h4>Event Discovery</h4>
+                            <p>Browse and search for events happening across your state. Filter by category, date, or location to find exactly what you're looking for.</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">📝</span>
+                            <h4>Post Your Events</h4>
+                            <p>Share your traditional events and celebrations with just a few clicks. Upload images and let your community know.</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">👥</span>
+                            <h4>Nigerian Community</h4>
+                            <p>RSVP to events and connect with neighbors. Celebrate together and grow your community network.</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🛡️</span>
+                            <h4>Quality & Safety</h4>
+                            <p>Our admin approval workflow ensures that all events are legitimate and safe for our community members.</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">📱</span>
+                            <h4>Mobile Ready</h4>
+                            <p>Browse events anywhere on any device. Our responsive design works perfectly on all screens.</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🎯</span>
+                            <h4>Smart Filtering</h4>
+                            <p>Find exactly what you're looking for with our advanced calendar and filter options.</p>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 3rem; margin-bottom: 1.5rem; text-align: center;">Why Choose Naija Events?</h3>
+                    <div style="background: linear-gradient(135deg, rgba(0, 122, 94, 0.05), rgba(255, 107, 53, 0.05)); padding: 2.5rem; border-radius: 1rem; border: 1px solid var(--border-color);">
+                        <ul style="list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <li style="display: flex; gap: 1rem;">
+                                <span style="font-size: 1.5rem;">✅</span>
+                                <div>
+                                    <strong>Easy to Use</strong>
+                                    <p style="margin: 0; color: var(--gray-color); font-size: 0.95rem;">Designed for all Nigerians</p>
+                                </div>
+                            </li>
+                            <li style="display: flex; gap: 1rem;">
+                                <span style="font-size: 1.5rem;">🔒</span>
+                                <div>
+                                    <strong>Secure & Safe</strong>
+                                    <p style="margin: 0; color: var(--gray-color); font-size: 0.95rem;">Verified community events</p>
+                                </div>
+                            </li>
+                            <li style="display: flex; gap: 1rem;">
+                                <span style="font-size: 1.5rem;">🚀</span>
+                                <div>
+                                    <strong>Fast & Reliable</strong>
+                                    <p style="margin: 0; color: var(--gray-color); font-size: 0.95rem;">Quick loading and responsive</p>
+                                </div>
+                            </li>
+                            <li style="display: flex; gap: 1rem;">
+                                <span style="font-size: 1.5rem;">🌍</span>
+                                <div>
+                                    <strong>Nigeria-Wide</strong>
+                                    <p style="margin: 0; color: var(--gray-color); font-size: 0.95rem;">Events across all states</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 3rem;">
+                        <h3>Ready to explore events?</h3>
+                        <p style="color: var(--gray-color); margin-bottom: 2rem;">Start discovering community celebrations near you today!</p>
+                        <a href="pages/event-list.html" class="btn btn-primary">Browse All Events</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="authModalTitle">Sign In</h2>
+                <button class="close-btn" onclick="closeAuthModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                    <div class="form-group">
+                        <label for="authEmail">Email</label>
+                        <input type="email" id="authEmail" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="authPassword">Password</label>
+                        <input type="password" id="authPassword" placeholder="Enter your password" required>
+                    </div>
+                    <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                        <label for="authConfirmPassword">Confirm Password</label>
+                        <input type="password" id="authConfirmPassword" placeholder="Confirm your password">
+                    </div>
+                    <div id="authMessage" class="auth-message" style="display: none;"></div>
+                    <button type="submit" class="btn btn-primary btn-block" id="authSubmitBtn">Sign In</button>
+                </form>
+                <div class="auth-toggle">
+                    <p id="authToggleText">Don't have an account? <button type="button" class="btn-link" onclick="toggleAuthMode()">Sign Up</button></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="pages/events.html">Browse Events</a></li>
+                        <li><a href="pages/post-event.html">Post Event</a></li>
+                        <li><a href="pages/admin.html">Admin Panel</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Follow Us</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-icon">📘</a>
+                        <a href="#" class="social-icon">🐦</a>
+                        <a href="#" class="social-icon">📷</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@naija-events.ng</p>
+                    <p>Phone: +234-8012-345-678</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Naija Events. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Firebase Config -->
+    <script src="assets/js/firebase-config.js"></script>
+    
+    <!-- Authentication -->
+    <script src="assets/js/auth.js"></script>
+    
+    <!-- UI Buttons (Sign In, Dropdown Menu) -->
+    <script src="assets/js/ui-buttons.js"></script>
+    
+    <!-- Notifications -->
+    <script src="assets/js/notifications.js"></script>
+    
+    <!-- App -->
+    <script src="assets/js/app.js"></script>
+    
+    <!-- Initialize Auth Module -->
+    <script>
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeAuthModule);
+        } else {
+            initializeAuthModule();
+        }
+    </script>
+</body>
+</html>
